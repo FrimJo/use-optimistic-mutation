@@ -50,7 +50,6 @@ export default function useOptimisticMutation<
     },
     onError: (error, newVariables, previousVariables) => {
       queryCache.setQueryData(queryKey, previousVariables);
-      // return error;
     },
     onSettled: () => {
       return queryCache.refetchQueries(queryKey);
