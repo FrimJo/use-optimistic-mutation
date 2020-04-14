@@ -33,16 +33,12 @@ export default function useOptimisticMutation<
   return useMutation(mutationFn, {
     ...mutationOptions,
     onMutate: newVariables => {
-      console.log('onMutate newVariables', newVariables);
-      console.log('onMutate queryKey', queryKey);
       if (!queryKey) {
         return undefined;
       }
 
       const updateQuery: string | [string, object] =
         typeof queryKey === 'string' ? queryKey : [queryKey[0], queryKey[1]];
-      console.log('onMutate updateQuery', updateQuery);
-
       // Snapshot the previous value
       const previousTodo = queryCache.getQueryData<TResults>(updateQuery);
 
@@ -53,15 +49,10 @@ export default function useOptimisticMutation<
       return previousTodo;
     },
     onError: (error, newVariables, previousVariables) => {
-      console.log('onError err', error);
-      console.log('onError newVariables', newVariables);
-      console.log('onError previousVariables', previousVariables);
-      console.log('onError queryKey', queryKey);
       queryCache.setQueryData(queryKey, previousVariables);
       // return error;
     },
     onSettled: () => {
-      console.log('onSettled queryKey', queryKey);
       return queryCache.refetchQueries(queryKey);
     },
   });
