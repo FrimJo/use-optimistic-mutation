@@ -4,14 +4,14 @@ import {
   MutationFunction,
   MutationOptions,
   MutateFunction,
-  MutationState,
-  QueryKey,
-} from 'react-query';
+  MutationResult,
+  AnyQueryKey,
+} from 'react-query'
 
-type OptimisticMutateFunction<
+type OptimisticMutateFunction<TResults, TVariables extends object> = MutateFunction<
   TResults,
-  TVariables extends object
-> = MutateFunction<TResults, TVariables>;
+  TVariables
+>
 
 /**
  * Proivded updateQuery key is used to expose a function to optimistically mutate that query.
@@ -22,37 +22,32 @@ type OptimisticMutateFunction<
  * @param mutationFn  The function to use to mutate the query.
  * @param mutationOptions Options to use in the useMutation hook.
  */
-export default function useOptimisticMutation<
-  TResults,
-  TVariables extends object
->(
-  queryKey: QueryKey,
+export default function useOptimisticMutation<TResults, TVariables extends object>(
+  queryKey: AnyQueryKey | string,
   mutationFn: MutationFunction<TResults, TVariables>,
   mutationOptions: MutationOptions<TResults, TVariables> = {}
-): [OptimisticMutateFunction<TResults, TVariables>, MutationState<TResults>] {
+): [OptimisticMutateFunction<TResults, TVariables>, MutationResult<TResults>] {
   return useMutation(mutationFn, {
     ...mutationOptions,
-    onMutate: newVariables => {
+    onMutate: (newVariables) => {
       if (!queryKey) {
-        return undefined;
+        return undefined
       }
 
-      const updateQuery: string | [string, object] =
-        typeof queryKey === 'string' ? queryKey : [queryKey[0], queryKey[1]];
       // Snapshot the previous value
-      const previousTodo = queryCache.getQueryData<TResults>(updateQuery);
+      const previousTodo = queryCache.getQueryData(queryKey) as TResults
 
       // Optimistically update to the new value
-      queryCache.setQueryData(queryKey, newVariables);
+      queryCache.setQueryData(queryKey, newVariables)
 
       // Return the snapshotted value
-      return previousTodo;
+      return previousTodo
     },
-    onError: (error, newVariables, previousVariables) => {
-      queryCache.setQueryData(queryKey, previousVariables);
+    onError: (previousVariables) => {
+      queryCache.setQueryData(queryKey, previousVariables)
     },
     onSettled: () => {
-      return queryCache.refetchQueries(queryKey);
+      return queryCache.refetchQueries(queryKey)
     },
-  });
+  })
 }
