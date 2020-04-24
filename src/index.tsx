@@ -6,6 +6,8 @@ import {
   MutateFunction,
   MutationResult,
   useQuery,
+  AnyQueryKey,
+  AnyVariables,
 } from 'react-query';
 import React from 'react';
 
@@ -25,9 +27,15 @@ type OptimisticMutateFunction<
  */
 export default function useOptimisticMutation<
   TResults,
-  TVariables extends object
+  TKey extends AnyQueryKey,
+  TVariables extends AnyVariables = []
 >(
-  queryKey: Parameters<typeof useQuery>[0], // Use same api for query key as useQuery
+  queryKey:
+    | TKey
+    | false
+    | null
+    | undefined
+    | (() => TKey | false | null | undefined), // Use same api for query key as useQuery
   mutationFn: MutationFunction<TResults, TVariables>,
   mutationOptions: MutationOptions<TResults, TVariables> = {}
 ): [OptimisticMutateFunction<TResults, TVariables>, MutationResult<TResults>] {
