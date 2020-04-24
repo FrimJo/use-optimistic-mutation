@@ -33,7 +33,7 @@ export default function useOptimisticMutation<
 ): [OptimisticMutateFunction<TResults, TVariables>, MutationResult<TResults>] {
   const key = React.useMemo(
     () => (typeof queryKey === 'function' ? queryKey() : queryKey),
-    []
+    [queryKey]
   );
 
   return useMutation(mutationFn, {
