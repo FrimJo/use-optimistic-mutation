@@ -6,14 +6,8 @@ import {
   MutateFunction,
   MutationResult,
   AnyQueryKey,
-  AnyVariables,
 } from 'react-query';
 import React from 'react';
-
-type OptimisticMutateFunction<
-  TResults,
-  TVariables extends object
-> = MutateFunction<TResults, TVariables>;
 
 /**
  * Proivded updateQuery key is used to expose a function to optimistically mutate that query.
@@ -27,7 +21,7 @@ type OptimisticMutateFunction<
 export default function useOptimisticMutation<
   TResults,
   TKey extends AnyQueryKey,
-  TVariables extends AnyVariables = []
+  TVariables = undefined
 >(
   queryKey:
     | TKey
@@ -37,7 +31,7 @@ export default function useOptimisticMutation<
     | (() => TKey | false | null | undefined), // Use same api for query key as useQuery
   mutationFn: MutationFunction<TResults, TVariables>,
   mutationOptions: MutationOptions<TResults, TVariables> = {}
-): [OptimisticMutateFunction<TResults, TVariables>, MutationResult<TResults>] {
+): [MutateFunction<TResults, TVariables>, MutationResult<TResults>] {
   const key = React.useMemo(
     () => (typeof queryKey === 'function' ? queryKey() : queryKey),
     [queryKey]
