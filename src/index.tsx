@@ -5,7 +5,6 @@ import {
   MutationOptions,
   MutateFunction,
   MutationResult,
-  useQuery,
   AnyQueryKey,
   AnyVariables,
 } from 'react-query';
