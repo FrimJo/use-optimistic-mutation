@@ -5,13 +5,14 @@ import {
   MutationOptions,
   MutateFunction,
   MutationResult,
-  AnyQueryKey,
-} from 'react-query'
+  useQuery,
+} from 'react-query';
+import React from 'react';
 
-type OptimisticMutateFunction<TResults, TVariables extends object> = MutateFunction<
+type OptimisticMutateFunction<
   TResults,
-  TVariables
->
+  TVariables extends object
+> = MutateFunction<TResults, TVariables>;
 
 /**
  * Proivded updateQuery key is used to expose a function to optimistically mutate that query.
@@ -22,32 +23,46 @@ type OptimisticMutateFunction<TResults, TVariables extends object> = MutateFunct
  * @param mutationFn  The function to use to mutate the query.
  * @param mutationOptions Options to use in the useMutation hook.
  */
-export default function useOptimisticMutation<TResults, TVariables extends object>(
-  queryKey: AnyQueryKey | string,
+export default function useOptimisticMutation<
+  TResults,
+  TVariables extends object
+>(
+  queryKey: Parameters<typeof useQuery>[0], // Use same api for query key as useQuery
   mutationFn: MutationFunction<TResults, TVariables>,
   mutationOptions: MutationOptions<TResults, TVariables> = {}
 ): [OptimisticMutateFunction<TResults, TVariables>, MutationResult<TResults>] {
+  const key = React.useMemo(
+    () => (typeof queryKey === 'function' ? queryKey() : queryKey),
+    []
+  );
+
   return useMutation(mutationFn, {
     ...mutationOptions,
-    onMutate: (newVariables) => {
-      if (!queryKey) {
-        return undefined
+    onMutate: newVariables => {
+      if (key === undefined || key === false || key === null) {
+        return undefined;
       }
 
       // Snapshot the previous value
-      const previousTodo = queryCache.getQueryData(queryKey) as TResults
+      const previousVariables = queryCache.getQueryData(key) as TResults;
 
       // Optimistically update to the new value
-      queryCache.setQueryData(queryKey, newVariables)
+      queryCache.setQueryData(key, newVariables);
 
       // Return the snapshotted value
-      return previousTodo
+      return previousVariables;
     },
-    onError: (previousVariables) => {
-      queryCache.setQueryData(queryKey, previousVariables)
+    onError: previousVariables => {
+      if (key === undefined || key === false || key === null) {
+        return;
+      }
+      queryCache.setQueryData(key, previousVariables);
     },
     onSettled: () => {
-      return queryCache.refetchQueries(queryKey)
+      if (key === undefined || key === false || key === null) {
+        return;
+      }
+      return queryCache.refetchQueries(key);
     },
-  })
+  });
 }
